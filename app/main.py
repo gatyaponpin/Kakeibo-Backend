@@ -33,3 +33,15 @@ def health():
 @app.get("/items/{item_id}")
 def read_item(item_id: int):
     return {"item_id": item_id}
+
+@app.get("/health/db")
+def health_db():
+    try:
+        with get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT 1")
+                cur.fetchone()
+        return {"db": "ok"}
+    except Exception as e:
+        # デバッグ用にエラーを返す（本番ではログにのみ出す）
+        return {"db": "ng", "error": str(e), "type": type(e).__name__}

@@ -1,5 +1,11 @@
 import os
+from pathlib import Path
+from dotenv import load_dotenv
 from psycopg_pool import ConnectionPool
+
+here = Path(__file__).resolve().parent
+load_dotenv(here / ".env")
+load_dotenv()
 
 def build_conn_url():
     # DATABASE_URL があればそれを優先
