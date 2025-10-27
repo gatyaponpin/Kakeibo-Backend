@@ -1,14 +1,27 @@
 import os
 from psycopg_pool import ConnectionPool
 
-# Render Postgres の接続文字列（例：postgres://..../dbname?sslmode=require）
-DATABASE_URL = os.getenv("DATABASE_URL")
-if not DATABASE_URL:
-    raise RuntimeError("DATABASE_URL is not set")
+def build_conn_url():
+    # DATABASE_URL があればそれを優先
+    url = os.getenv("DATABASE_URL")
+    if url:
+        return url
 
-# プールを1つだけ作る（アプリ起動時）
-pool = ConnectionPool(conninfo=DATABASE_URL, min_size=1, max_size=5)
+    # 分割形式から組み立てる
+    host = os.getenv("DB_HOST")
+    port = os.getenv("DB_PORT", "5432")
+    name = os.getenv("DB_NAME")
+    user = os.getenv("DB_USER")
+    password = os.getenv("DB_PASSWORD")
+
+    if not all([host, name, user, password]):
+        raise RuntimeError("DB 接続情報が不足しています")
+
+    return f"postgresql://{user}:{password}@{host}:{port}/{name}?sslmode=require"
+
+DATABASE_URL = build_conn_url()
+
+pool = ConnectionPool(conninfo=DATABASE_URL, min_size=1, max_size=2, timeout=10.0)
 
 def get_conn():
-    # with get_conn() as conn: で使えるように
     return pool.connection()
