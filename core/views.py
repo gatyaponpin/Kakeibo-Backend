@@ -1,10 +1,14 @@
-from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
+# core/views.py
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from core.models import User
+from core.serializers.user import SimpleUserSerializer
 
-def health(request):
-    return JsonResponse({"status": "ok"})
-
-@login_required
-def me(request):
-    user = request.user
-    return JsonResponse({"id": user.id, "username": user.username})
+@api_view(["GET"])
+@permission_classes([AllowAny])   # 疎通確認なので無条件許可
+def demo_user(request):
+    user = User.objects.order_by("id").first()
+    if not user:
+        return Response({"detail": "no user exists"}, status=404)
+    return Response(SimpleUserSerializer(user).data)

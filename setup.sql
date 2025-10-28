@@ -1,4 +1,4 @@
-CREATE TABLE "ユーザグループテーブル" (
+CREATE TABLE "user_groups" (
   "id" SERIAL PRIMARY KEY NOT NULL,
   "name" VARCHAR(256) NOT NULL,
   "created_at" TIMESTAMPTZ DEFAULT now(),
@@ -6,7 +6,7 @@ CREATE TABLE "ユーザグループテーブル" (
   "deleted_at" TIMESTAMPTZ
 );
 
-CREATE TABLE "ユーザテーブル" (
+CREATE TABLE "users" (
   "id" SERIAL NOT NULL PRIMARY KEY,
   "user_group_id" INTEGER,
   "line_user_id" VARCHAR(256),
@@ -16,10 +16,10 @@ CREATE TABLE "ユーザテーブル" (
   "created_at" TIMESTAMPTZ DEFAULT now(),
   "updated_at" TIMESTAMPTZ DEFAULT now(),
   "deleted_at" TIMESTAMPTZ,
-  FOREIGN KEY ("user_group_id") REFERENCES "ユーザグループテーブル" ("id") ON DELETE CASCADE
+  FOREIGN KEY ("user_group_id") REFERENCES "user_groups" ("id") ON DELETE CASCADE
 );
 
-CREATE TABLE "カテゴリーテーブル" (
+CREATE TABLE "categories" (
   "id" SERIAL PRIMARY KEY,
   "user_group_id" INTEGER,
   "category_name" VARCHAR(100) NOT NULL DEFAULT 'カテゴリ',
@@ -27,10 +27,10 @@ CREATE TABLE "カテゴリーテーブル" (
   "created_at" TIMESTAMPTZ DEFAULT now(),
   "updated_at" TIMESTAMPTZ DEFAULT now(),
   "deleted_at" TIMESTAMPTZ,
-  FOREIGN KEY ("user_group_id") REFERENCES "ユーザグループテーブル" ("id") ON DELETE CASCADE
+  FOREIGN KEY ("user_group_id") REFERENCES "user_groups" ("id") ON DELETE CASCADE
 );
 
-CREATE TABLE "家計簿テーブル" (
+CREATE TABLE "expenses" (
   "id" SERIAL PRIMARY KEY,
   "user_group_id" INTEGER,
   "category_id" INTEGER,
@@ -42,11 +42,11 @@ CREATE TABLE "家計簿テーブル" (
   "created_at" TIMESTAMPTZ DEFAULT now(),
   "updated_at" TIMESTAMPTZ DEFAULT now(),
   "deleted_at" TIMESTAMPTZ,
-  FOREIGN KEY ("user_group_id") REFERENCES "ユーザグループテーブル" ("id") ON DELETE CASCADE,
-  FOREIGN KEY ("category_id") REFERENCES "カテゴリーテーブル" ("id") ON DELETE SET NULL
+  FOREIGN KEY ("user_group_id") REFERENCES "user_groups" ("id") ON DELETE CASCADE,
+  FOREIGN KEY ("category_id") REFERENCES "categories" ("id") ON DELETE SET NULL
 );
 
-CREATE TABLE "固定費テーブル" (
+CREATE TABLE "subscriptions" (
   "id" SERIAL PRIMARY KEY,
   "user_group_id" INTEGER,
   "category_id" INTEGER,
@@ -57,35 +57,31 @@ CREATE TABLE "固定費テーブル" (
   "created_at" TIMESTAMPTZ DEFAULT now(),
   "updated_at" TIMESTAMPTZ DEFAULT now(),
   "deleted_at" TIMESTAMPTZ,
-  FOREIGN KEY ("user_group_id") REFERENCES "ユーザグループテーブル" ("id") ON DELETE CASCADE,
-  FOREIGN KEY ("category_id") REFERENCES "カテゴリーテーブル" ("id") ON DELETE SET NULL
+  FOREIGN KEY ("user_group_id") REFERENCES "user_groups" ("id") ON DELETE CASCADE,
+  FOREIGN KEY ("category_id") REFERENCES "categories" ("id") ON DELETE SET NULL
 );
 
 -- インデックス作成
 -- ユーザ
-CREATE INDEX "idx_ユーザ_user_group_id" ON "ユーザテーブル" ("user_group_id");
+CREATE INDEX "idx_user_group_id" ON "users" ("user_group_id");
 
 -- カテゴリ
-CREATE INDEX "idx_カテゴリ_user_group_id" ON "カテゴリーテーブル" ("user_group_id");
+CREATE INDEX "idx_category_user_group_id" ON "categories" ("user_group_id");
 
 -- 家計簿
-CREATE INDEX "idx_家計簿_user_group_id" ON "家計簿テーブル" ("user_group_id");
-CREATE INDEX "idx_家計簿_category_id"   ON "家計簿テーブル" ("category_id");
-CREATE INDEX "idx_家計簿_occur_date"    ON "家計簿テーブル" ("occur_date");
-
--- 予算
-CREATE INDEX "idx_予算_user_group_id" ON "予算テーブル" ("user_group_id");
-CREATE INDEX "idx_予算_category_id"   ON "予算テーブル" ("category_id");
+CREATE INDEX "idx_expense_user_group_id" ON "expenses" ("user_group_id");
+CREATE INDEX "idx_expense_category_id"   ON "expenses" ("category_id");
+CREATE INDEX "idx_expense_occur_date"    ON "expenses" ("occur_date");
 
 -- 固定費
-CREATE INDEX "idx_固定費_user_group_id" ON "固定費テーブル" ("user_group_id");
-CREATE INDEX "idx_固定費_category_id"   ON "固定費テーブル" ("category_id");
+CREATE INDEX "idx_subscription_user_group_id" ON "subscriptions" ("user_group_id");
+CREATE INDEX "idx_subscription_category_id"   ON "subscriptions" ("category_id");
 
 -- 同じグループ内でカテゴリ名は一意にしたい場合
-ALTER TABLE "カテゴリーテーブル"
-ADD CONSTRAINT "ux_カテゴリ_group_name"
+ALTER TABLE "categories"
+ADD CONSTRAINT "ux_categories_group_name"
 UNIQUE ("user_group_id", "category_name");
 
 -- ユーザのemailを一意にしたい場合（全体でユニーク）
-ALTER TABLE "ユーザテーブル"
-ADD CONSTRAINT "ux_ユーザ_email" UNIQUE ("email");
+ALTER TABLE "users"
+ADD CONSTRAINT "ux_user_email" UNIQUE ("email");

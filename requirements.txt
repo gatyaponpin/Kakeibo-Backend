@@ -4,3 +4,5 @@ dj-database-url
 python-dotenv
 whitenoise
 gunicorn
+djangorestframework
+django-cors-headers
