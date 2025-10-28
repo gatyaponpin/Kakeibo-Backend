@@ -11,4 +11,5 @@ def demo_user(request):
     user = User.objects.order_by("id").first()
     if not user:
         return Response({"detail": "no user exists"}, status=404)
+    print(SimpleUserSerializer(user).data)
     return Response(SimpleUserSerializer(user).data)
